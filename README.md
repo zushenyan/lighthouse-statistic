@@ -1,3 +1,3 @@
-# starter-node-ts
+# Lighthouse-statistic
 
-A repo for initializing `nodejs` + `typescript` project with ease!
+A CLI tool for automatically running lighthouse and calculate the statistics for you.
