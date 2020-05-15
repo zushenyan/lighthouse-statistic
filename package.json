@@ -1,0 +1,42 @@
+{
+  "license": "MIT",
+  "name": "create-node-ts",
+  "version": "0.0.1",
+  "description": "Create a simple Nodejs with built-in TypeScript",
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=13.11.0"
+  },
+  "author": "Andrew Yan <zushenyan@gmail.com>",
+  "scripts": {
+    "clean": "rm -rf ./dist",
+    "build": "yarn run clean && yarn run lint:fix && yarn run test:ci && tsc",
+    "lint:tsc": "tsc -noEmit",
+    "lint:eslint": "eslint src/**/*.ts --quiet --fix",
+    "lint:eslint:fix": "yarn run lint:eslint --fix",
+    "lint:fix": "yarn run lint:tsc && yarn run lint:eslint:fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --coverage --ci"
+  },
+  "devDependencies": {
+    "@types/jest": "^25.1.4",
+    "@typescript-eslint/eslint-plugin": "^2.25.0",
+    "@typescript-eslint/parser": "^2.25.0",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.1",
+    "eslint-plugin-prettier": "^3.1.2",
+    "husky": "^4.2.3",
+    "jest": "^25.2.0",
+    "lint-staged": "^10.0.9",
+    "prettier": "^2.0.2",
+    "ts-jest": "^25.2.1",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "module-alias": "^2.2.2"
+  },
+  "_moduleAliases": {
+    "@": "dist"
+  }
+}
