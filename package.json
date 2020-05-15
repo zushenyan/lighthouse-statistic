@@ -1,22 +1,24 @@
 {
   "license": "MIT",
-  "name": "@zushenyan/lighthouse-batch",
+  "name": "@zushenyan/lighthouse-statistic",
   "version": "0.0.1",
-  "homepage": "https://github.com/zushenyan/lighthouse-batch",
-  "description": "A CLI tool for running the Lighthouse multiple times and get the statistics for you.",
+  "homepage": "https://github.com/zushenyan/lighthouse-statistic",
+  "description": "A CLI tool for running the Lighthouse multiple times and calculate the statistics for you.",
   "keywords": [
     "lighthouse",
     "audits",
     "performance",
-    "batch",
+    "statistic",
     "cli"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/zushenyan/lighthouse-batch"
+    "url": "https://github.com/zushenyan/lighthouse-statistic"
   },
-  "main": "dist/index.js",
-  "bin": "dist/index.js",
+  "main": "./dist/index.js",
+  "bin": {
+    "ls": "./dist/index.js"
+  },
   "engines": {
     "yarn": ">=1.22.4",
     "node": ">=13.11.0"
