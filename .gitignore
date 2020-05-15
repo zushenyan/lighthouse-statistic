@@ -117,4 +117,4 @@ web_modules/
 # start of custom ignore rules
 # ---
 lighthouse-test.config.json
-dist
+bin

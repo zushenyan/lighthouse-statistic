@@ -1,7 +1,10 @@
 {
   "license": "MIT",
-  "name": "@zushenyan/lighthouse-statistic",
+  "name": "@andrewyan/lighthouse-statistic",
   "version": "0.0.1",
+  "publishConfig": {
+    "access": "public"
+  },
   "homepage": "https://github.com/zushenyan/lighthouse-statistic",
   "description": "A CLI tool for running the Lighthouse multiple times and calculate the statistics for you.",
   "keywords": [
@@ -15,10 +18,13 @@
     "type": "git",
     "url": "https://github.com/zushenyan/lighthouse-statistic"
   },
-  "main": "./dist/index.js",
+  "main": "./bin/index.js",
   "bin": {
-    "ls": "./dist/index.js"
+    "lighthouse-statistic": "./bin/index.js"
   },
+  "files": [
+    "bin"
+  ],
   "engines": {
     "yarn": ">=1.22.4",
     "node": ">=13.11.0"
@@ -63,6 +69,6 @@
     "yup": "^0.28.5"
   },
   "_moduleAliases": {
-    "@": "dist"
+    "@": "bin"
   }
 }

@@ -16,5 +16,10 @@ export const configSchema = yup.object({
   port: port.optional(),
   audits: audits
     .required('The "audits" field in JSON file cannot be empty.')
-    .default(['first-contentful-paint']),
+    .default([
+      AuditKindsEnum['first-meaningful-paint'],
+      AuditKindsEnum['first-contentful-paint'],
+      AuditKindsEnum['first-cpu-idle'],
+      AuditKindsEnum['time-to-first-byte'],
+    ]),
 });
