@@ -6,18 +6,6 @@ import { ArgvSchema } from './schemas/argv.d';
 import { argvSchema } from './schemas/argv';
 import { ConfigSchema } from './schemas/config.d';
 import { configSchema } from './schemas/config';
-import { AuditKindsEnum } from './lighthouse/constants';
-
-export const defaultConfig: ConfigSchema = {
-  url: '',
-  runs: 1,
-  audits: [
-    AuditKindsEnum['first-meaningful-paint'],
-    AuditKindsEnum['first-contentful-paint'],
-    AuditKindsEnum['first-cpu-idle'],
-    AuditKindsEnum['time-to-first-byte'],
-  ],
-};
 
 export const readConfig = async (
   filePath: string | undefined = '',
@@ -31,7 +19,6 @@ export const readConfig = async (
     if (e.code === 'ENOENT') {
       console.log(e.message);
       console.log('Will use built-in config instead.');
-      return defaultConfig;
     } else {
       console.log(e.message);
     }
