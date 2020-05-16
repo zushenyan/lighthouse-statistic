@@ -9,8 +9,8 @@ import * as chromeLauncher from 'chrome-launcher';
 import R from 'ramda';
 import { max, min, mean, median } from 'mathjs';
 
+import { Config as ConfigSchema } from './schemas/config.d';
 import { Report } from './index.d';
-import { processArgv } from './bootup';
 
 const launchChromeAndRunLighthouse = async (
   url: string,
@@ -28,10 +28,10 @@ const launchChromeAndRunLighthouse = async (
   return results.lhr;
 };
 
-(async (): Promise<void> => {
+export const processData = async (
+  config: ConfigSchema,
+): Promise<Report | undefined> => {
   try {
-    const config = await processArgv();
-    console.log('Load config successfully.');
     const reports: Array<LighthouseReport> = [];
     for (let i = 0; i < config.runs; i++) {
       console.log(`Start running ${i + 1} time(s)...`);
@@ -57,8 +57,8 @@ const launchChromeAndRunLighthouse = async (
         audits: {},
       },
     );
-    console.log(results);
+    return results;
   } catch (e) {
     console.log(e.message);
   }
-})();
+};

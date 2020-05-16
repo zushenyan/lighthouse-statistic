@@ -20,7 +20,7 @@
   },
   "main": "./bin/index.js",
   "bin": {
-    "lighthouse-statistic": "./bin/index.js"
+    "lighthouse-statistic": "./bin/cli.js"
   },
   "files": [
     "bin"
@@ -31,6 +31,7 @@
   },
   "author": "Andrew Yan <zushenyan@gmail.com>",
   "scripts": {
+    "start": "node -r ts-node/register ./src/cli.ts",
     "clean": "rm -rf ./dist",
     "build": "yarn run clean && yarn run lint:fix && yarn run test:ci && tsc",
     "lint:tsc": "tsc -noEmit",
@@ -45,6 +46,7 @@
     "@types/jest": "^25.1.4",
     "@types/mathjs": "^6.0.5",
     "@types/minimist": "^1.2.0",
+    "@types/module-alias": "^2.0.0",
     "@types/ramda": "^0.27.4",
     "@types/yup": "^0.28.3",
     "@typescript-eslint/eslint-plugin": "^2.25.0",
@@ -57,13 +59,14 @@
     "lint-staged": "^10.0.9",
     "prettier": "^2.0.2",
     "ts-jest": "^25.2.1",
+    "ts-node": "^8.10.1",
     "typescript": "^3.8.3"
   },
   "dependencies": {
     "chrome-launcher": "^0.13.2",
+    "commander": "^5.1.0",
     "lighthouse": "^5.6.0",
     "mathjs": "^7.0.0",
-    "minimist": "^1.2.5",
     "module-alias": "^2.2.2",
     "ramda": "^0.27.0",
     "yup": "^0.28.5"

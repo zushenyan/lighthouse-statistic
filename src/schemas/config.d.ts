@@ -1,4 +1,4 @@
-import yup from 'yup';
-import { configSchema } from './config';
+import * as yup from 'yup';
+import { config } from './config';
 
-export type ConfigSchema = yup.InferType<typeof configSchema>;
+export type Config = yup.InferType<typeof config>;

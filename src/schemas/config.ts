@@ -1,21 +1,21 @@
 import * as yup from 'yup';
+
 import { AuditKindsEnum } from '../lighthouse/constants';
-import { url, runs, port } from './argv';
 
-export const audits = yup
-  .array()
-  .of(yup.string().oneOf(Object.values(AuditKindsEnum)));
-
-export const configSchema = yup.object({
-  url: url
-    .required('The "url" field in JSON file cannot be empty.')
-    .default(''),
-  runs: runs
-    .required('The "runs" field in JSON file cannot be empty.')
+export const config = yup.object({
+  url: yup.string().required('The "url" field cannot be empty.'),
+  runs: yup
+    .number()
+    .positive('The "runs" field should be positive.')
+    .required('The "runs" field cannot be empty.')
     .default(1),
-  port: port.optional(),
-  audits: audits
-    .required('The "audits" field in JSON file cannot be empty.')
+  port: yup
+    .number()
+    .positive('The "port" field should be a valid number.')
+    .optional(),
+  audits: yup
+    .array(yup.string().oneOf(Object.values(AuditKindsEnum)))
+    .required('The "audits" field cannot be empty.')
     .default([
       AuditKindsEnum['first-meaningful-paint'],
       AuditKindsEnum['first-contentful-paint'],
