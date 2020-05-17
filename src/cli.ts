@@ -33,7 +33,7 @@ export const startAction = async (
 ): Promise<void> => {
   try {
     const args = await commandSchemas.start.validate({ url, ...opts });
-    const config = await configSchema.validate(args, { stripUnknown: true });
+    const config = await configSchema.validate(args, { strict: true });
     const result = await processData(config);
     console.log(result);
   } catch (e) {
@@ -46,7 +46,7 @@ export const configAction = async (path: string): Promise<void> => {
   try {
     const rawConfig = await readConfig(path);
     const config = await configSchema.validate(rawConfig, {
-      stripUnknown: true,
+      strict: true,
     });
     const result = await processData(config);
     console.log(result);

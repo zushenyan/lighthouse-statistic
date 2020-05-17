@@ -12,30 +12,46 @@ import { max, min, mean, median } from 'mathjs';
 import { Config as ConfigSchema } from './schemas/config.d';
 import { Report } from './index.d';
 
-const launchChromeAndRunLighthouse = async (
+const launchChrome = async (
   url: string,
-  port?: number,
-): Promise<LighthouseReport> => {
-  const chrome = await chromeLauncher.launch({
-    chromeFlags: ['--headless'],
-    port,
-  });
-  const results = await lighthouse(url, {
-    port: chrome.port,
-    onlyCategories: ['performance'],
-  });
-  await chrome.kill();
-  return results.lhr;
+  config: ConfigSchema,
+): Promise<chromeLauncher.LaunchedChrome | undefined> => {
+  try {
+    return await chromeLauncher.launch(config.chrome);
+  } catch (e) {
+    console.log('something went wrong while launching Chrome.');
+    console.log(e);
+  }
+};
+
+const runLighthouse = async (
+  url: string,
+  config: ConfigSchema,
+): Promise<LighthouseReport | undefined> => {
+  const chrome = await launchChrome(url, config);
+  try {
+    const results = await lighthouse(
+      url,
+      { port: chrome?.port, ...config.lighthouse?.flags },
+      config.lighthouse?.config,
+    );
+    return results.lhr;
+  } catch (e) {
+    console.log('something went wrong while running lighthouse.');
+    console.log(e);
+  } finally {
+    if (chrome) await chrome.kill();
+  }
 };
 
 export const processData = async (
   config: ConfigSchema,
 ): Promise<Report | undefined> => {
   try {
-    const reports: Array<LighthouseReport> = [];
+    const reports: Array<LighthouseReport | undefined> = [];
     for (let i = 0; i < config.runs; i++) {
-      console.log(`Start running ${i + 1} time(s)...`);
-      reports.push(await launchChromeAndRunLighthouse(config.url, config.port));
+      console.log(`Start running ${i + 1} of ${config.runs} times.`);
+      reports.push(await runLighthouse(config.url, config));
     }
     console.log('Done running.');
     const auditKindLens = config.audits.map((v) => R.lensPath(['audits', v]));
