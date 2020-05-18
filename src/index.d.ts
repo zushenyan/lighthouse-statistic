@@ -1,20 +1,19 @@
-import { AuditKinds } from 'lighthouse';
+import { Report as LighthouseReport } from 'lighthouse';
 
-export interface ReportConfig {
-  runs: number;
-  url: string;
-  audits: Array<AuditKinds>;
-}
-
-export interface Report {
+export interface Statistic {
   runs: number;
   url: string;
   audits: {
-    [k in AuditKinds]?: {
+    [k: string]: {
       max: number;
       min: number;
       avg: number;
       med: number;
     };
   };
+}
+
+export interface Reports {
+  lighthouseReports: Array<LighthouseReport>;
+  statistic: Statistic;
 }

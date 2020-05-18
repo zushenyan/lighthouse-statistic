@@ -2,40 +2,47 @@ import { Flags, Config } from 'lighthouse';
 import * as chromeLauncher from 'chrome-launcher';
 import * as yup from 'yup';
 
-import { AuditKindsEnum } from '@/lighthouse/constants';
-
 export const config = yup
   .object({
     url: yup.string().required(),
     runs: yup.number().positive().required().default(1),
+    output: yup
+      .object({
+        basePath: yup.string().default('.'),
+        directoryName: yup.string().default(new Date().toISOString()),
+        reportsFilename: yup.string().default('lighthouse-reports.json'),
+        statisticFilename: yup.string().default('statistic.json'),
+      })
+      .noUnknown(),
     audits: yup
-      .array(yup.string().oneOf(Object.values(AuditKindsEnum)))
-      .required()
+      .array(yup.string())
       .default([
-        AuditKindsEnum['first-meaningful-paint'],
-        AuditKindsEnum['first-contentful-paint'],
-        AuditKindsEnum['first-cpu-idle'],
-        AuditKindsEnum['time-to-first-byte'],
+        'first-meaningful-paint',
+        'first-contentful-paint',
+        'first-cpu-idle',
+        'time-to-first-byte',
       ]),
     chrome: yup
       .object<chromeLauncher.Options>({
-        startingUrl: yup.string().optional(),
-        chromeFlags: yup.array(yup.string()).optional(),
-        port: yup.number().optional(),
-        handleSIGINT: yup.boolean().optional(),
-        chromePath: yup.string().optional(),
-        userDataDir: yup.string().optional(),
+        startingUrl: yup.string().notRequired(),
+        chromeFlags: yup.array(yup.string()).notRequired(),
+        port: yup.number().notRequired(),
+        handleSIGINT: yup.boolean().notRequired(),
+        chromePath: yup.string().notRequired(),
+        userDataDir: yup.string().notRequired(),
         logLevel: yup
           .string()
           .oneOf(['verbose', 'info', 'error', 'silent'])
-          .optional(),
-        ignoreDefaultFlags: yup.boolean().optional(),
-        connectionPollInterval: yup.number().positive().optional(),
-        maxConnectionRetries: yup.number().positive().optional(),
-        envVars: yup.object<{ [k: string]: string | undefined }>().optional(),
+          .notRequired(),
+        ignoreDefaultFlags: yup.boolean().notRequired(),
+        connectionPollInterval: yup.number().positive().notRequired(),
+        maxConnectionRetries: yup.number().positive().notRequired(),
+        envVars: yup
+          .object<{ [k: string]: string | undefined }>()
+          .notRequired(),
       })
       .noUnknown()
-      .optional()
+      .notRequired()
       .default({
         chromeFlags: ['--headless'],
       }),
@@ -43,12 +50,13 @@ export const config = yup
       .object({
         flags: yup
           .object<Flags>()
-          .optional()
+          .notRequired()
           .default({
             onlyCategories: ['performance'],
           }),
-        config: yup.object<Config>().optional(),
+        config: yup.object<Config>().notRequired(),
       })
-      .optional(),
+      .noUnknown()
+      .notRequired(),
   })
   .noUnknown();

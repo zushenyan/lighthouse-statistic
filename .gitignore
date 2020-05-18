@@ -118,3 +118,4 @@ web_modules/
 # ---
 lighthouse-test.config.json
 bin
+output-test

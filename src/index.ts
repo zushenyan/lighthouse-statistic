@@ -10,7 +10,7 @@ import R from 'ramda';
 import { max, min, mean, median } from 'mathjs';
 
 import { Config as ConfigSchema } from './schemas/config.d';
-import { Report } from './index.d';
+import { Statistic, Reports } from './index.d';
 
 const launchChrome = async (
   url: string,
@@ -25,8 +25,8 @@ const launchChrome = async (
 };
 
 const runLighthouse = async (
-  url: string,
   config: ConfigSchema,
+  url: string,
 ): Promise<LighthouseReport | undefined> => {
   const chrome = await launchChrome(url, config);
   try {
@@ -37,8 +37,7 @@ const runLighthouse = async (
     );
     return results.lhr;
   } catch (e) {
-    console.log('something went wrong while running lighthouse.');
-    console.log(e);
+    throw e;
   } finally {
     if (chrome) await chrome.kill();
   }
@@ -46,18 +45,28 @@ const runLighthouse = async (
 
 export const processData = async (
   config: ConfigSchema,
-): Promise<Report | undefined> => {
+): Promise<Reports | undefined> => {
   try {
-    const reports: Array<LighthouseReport | undefined> = [];
-    for (let i = 0; i < config.runs; i++) {
-      console.log(`Start running ${i + 1} of ${config.runs} times.`);
-      reports.push(await runLighthouse(config.url, config));
+    const lighthouseReports: Array<LighthouseReport> = [];
+    for (let i = 0, times = i + 1; i < config.runs; i++) {
+      console.log(`Start running ${times} of ${config.runs} times.`);
+      try {
+        const report = await runLighthouse(config, config.url);
+        if (report) {
+          lighthouseReports.push(report);
+        }
+      } catch (e) {
+        console.log(
+          `Something went wrong while performing ${times} run. Will skip this result.`,
+        );
+        console.log(e);
+      }
     }
     console.log('Done running.');
     const auditKindLens = config.audits.map((v) => R.lensPath(['audits', v]));
-    const results = auditKindLens.reduce<Report>(
+    const statistic = auditKindLens.reduce<Statistic>(
       (acc, len, index) => {
-        const detailArr = reports.map<AuditKindDetail>(R.view(len));
+        const detailArr = lighthouseReports.map<AuditKindDetail>(R.view(len));
         const numericValueArr = detailArr.map((v) => v.numericValue);
         acc.audits[config.audits[index]] = {
           max: max(numericValueArr),
@@ -73,7 +82,10 @@ export const processData = async (
         audits: {},
       },
     );
-    return results;
+    return {
+      lighthouseReports,
+      statistic,
+    };
   } catch (e) {
     console.log(e.message);
   }

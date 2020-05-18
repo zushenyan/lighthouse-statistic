@@ -1,7 +1,4 @@
 declare module 'lighthouse' {
-  export type AuditKinds = keyof typeof import('./constants').AuditKindsEnum;
-  export type CategoryKinds = keyof typeof import('./constants').CategoryKindsEnum;
-
   // the type is from
   // https://github.com/GoogleChrome/lighthouse/blob/master/types/externs.d.ts#L145
   interface SharedFlagsSettings {
@@ -70,15 +67,16 @@ declare module 'lighthouse' {
 
   export interface Report {
     audits: {
-      [key in AuditKinds]: AuditKindDetail;
+      [key: string]: AuditKindDetail;
     };
     categories: {
-      [key in CategoryKinds]: CategoryKindDetail;
+      [key: string]: CategoryKindDetail;
     };
   }
 
   export interface Result {
     lhr: Report;
+    report: unknown;
   }
 
   export default function (
