@@ -3,12 +3,25 @@ import fs from 'fs';
 import path from 'path';
 import { program } from 'commander';
 
-import packageJson from '../package.json';
-
 import * as commandSchemas from './schemas/commands';
 import { validateWithStrictAndCast } from './schemas/utils';
 import { Reports, ConfigSchema, configSchema, processData } from './lib';
 import debug from './debug';
+import { PackageJson } from './index.d';
+
+export const readPackageJson = async (): Promise<PackageJson | undefined> => {
+  try {
+    const packageJsonPath = path.resolve(__dirname, '..', 'package.json');
+    const rawData = await fs.promises.readFile(packageJsonPath);
+    const json = JSON.parse(rawData.toString());
+    debug(json);
+    return json;
+  } catch (e) {
+    console.error('Something went wrong while reading config.');
+    console.error(e);
+    process.exit(1);
+  }
+};
 
 export const readConfig = async (
   filePath: string | undefined = '',
@@ -26,7 +39,7 @@ export const readConfig = async (
   }
 };
 
-const writeOutputs = async (
+export const writeOutputs = async (
   config: ConfigSchema,
   reports: Reports,
 ): Promise<void> => {
@@ -104,22 +117,27 @@ export const configAction = async (path: string): Promise<void> => {
   }
 };
 
-program.version(packageJson.version).description(packageJson.description);
+(async (): Promise<void> => {
+  const packageJson = await readPackageJson();
+  program
+    .version(packageJson?.version || '')
+    .description(packageJson?.description || '');
 
-program
-  .command('config <path>')
-  .description('The path to the custom benchmark config.')
-  .action(configAction);
+  program
+    .command('config <path>')
+    .description('The path to the custom benchmark config.')
+    .action(configAction);
 
-program
-  .command('start <url>', { isDefault: true })
-  .description(
-    'Start running benchmark with default benchmark setting. The <url> is the webpage you want to test against.',
-  )
-  .option(
-    '-r, --runs <number>',
-    'How many times do you want to perform benchmark.',
-  )
-  .action(startAction);
+  program
+    .command('start <url>', { isDefault: true })
+    .description(
+      'Start running benchmark with default benchmark setting. The <url> is the webpage you want to test against.',
+    )
+    .option(
+      '-r, --runs <number>',
+      'How many times do you want to perform benchmark.',
+    )
+    .action(startAction);
 
-program.parse(process.argv);
+  program.parse(process.argv);
+})();
