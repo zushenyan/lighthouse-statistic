@@ -55,8 +55,8 @@ declare module 'lighthouse' {
   interface AuditKindDetail {
     id: string;
     title: string;
-    score: number;
-    numericValue: number;
+    score?: number;
+    numericValue?: number;
   }
 
   interface CategoryKindDetail {

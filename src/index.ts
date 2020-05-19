@@ -1,92 +1,125 @@
 #!/usr/bin/env node
-import 'module-alias/register';
+import fs from 'fs';
+import path from 'path';
+import { program } from 'commander';
 
-import lighthouse, {
-  Report as LighthouseReport,
-  AuditKindDetail,
-} from 'lighthouse';
-import * as chromeLauncher from 'chrome-launcher';
-import R from 'ramda';
-import { max, min, mean, median } from 'mathjs';
+import packageJson from '../package.json';
 
-import { Config as ConfigSchema } from './schemas/config.d';
-import { Statistic, Reports } from './index.d';
+import * as commandSchemas from './schemas/commands';
+import { validateWithStrictAndCast } from './schemas/utils';
+import { Reports, ConfigSchema, configSchema, processData } from './lib';
+import debug from './debug';
 
-const launchChrome = async (
-  url: string,
-  config: ConfigSchema,
-): Promise<chromeLauncher.LaunchedChrome | undefined> => {
+export const readConfig = async (
+  filePath: string | undefined = '',
+): Promise<ConfigSchema | {} | undefined> => {
   try {
-    return await chromeLauncher.launch(config.chrome);
+    const absPath = path.resolve(process.cwd(), filePath);
+    const rawData = await fs.promises.readFile(absPath);
+    const json = JSON.parse(rawData.toString());
+    debug(json);
+    return json;
   } catch (e) {
-    console.log('something went wrong while launching Chrome.');
-    console.log(e);
+    console.error('Something went wrong while reading config.');
+    console.error(e);
+    process.exit(1);
   }
 };
 
-const runLighthouse = async (
+const writeOutputs = async (
   config: ConfigSchema,
-  url: string,
-): Promise<LighthouseReport | undefined> => {
-  const chrome = await launchChrome(url, config);
+  reports: Reports,
+): Promise<void> => {
   try {
-    const results = await lighthouse(
-      url,
-      { port: chrome?.port, ...config.lighthouse?.flags },
-      config.lighthouse?.config,
+    console.log('Writing reports to disk...');
+    const directoryPath = path.resolve(
+      config.output.basePath,
+      config.output.directoryName,
     );
-    return results.lhr;
+    await fs.promises.mkdir(directoryPath, { recursive: true });
+    const reportsPath = path.resolve(
+      directoryPath,
+      config.output.reportsFilename,
+    );
+    const statisticPath = path.resolve(
+      directoryPath,
+      config.output.statisticFilename,
+    );
+    const reportsRawData = new Uint8Array(
+      Buffer.from(JSON.stringify(reports.lighthouseReports)),
+    );
+    const statisticRawData = new Uint8Array(
+      Buffer.from(JSON.stringify(reports.statistic)),
+    );
+    await fs.promises.writeFile(reportsPath, reportsRawData);
+    await fs.promises.writeFile(statisticPath, statisticRawData);
+    console.log(
+      `Done writing reports. Please see "${directoryPath}" for reports.`,
+    );
   } catch (e) {
-    throw e;
-  } finally {
-    if (chrome) await chrome.kill();
+    console.error('Something went wrong while writing reports to disk.');
+    console.error(e);
+    process.exit(1);
   }
 };
 
-export const processData = async (
-  config: ConfigSchema,
-): Promise<Reports | undefined> => {
+export const startAction = async (
+  url: string,
+  opts: Record<string, unknown>,
+): Promise<void> => {
   try {
-    const lighthouseReports: Array<LighthouseReport> = [];
-    for (let i = 0, times = i + 1; i < config.runs; i++) {
-      console.log(`Start running ${times} of ${config.runs} times.`);
-      try {
-        const report = await runLighthouse(config, config.url);
-        if (report) {
-          lighthouseReports.push(report);
-        }
-      } catch (e) {
-        console.log(
-          `Something went wrong while performing ${times} run. Will skip this result.`,
-        );
-        console.log(e);
-      }
+    const args = await commandSchemas.start.validate(
+      { url, ...opts },
+      { stripUnknown: true },
+    );
+    const config = await validateWithStrictAndCast(configSchema, args);
+    debug(config);
+    const reports = await processData(config);
+    debug(reports?.statistic);
+    if (reports) {
+      await writeOutputs(config, reports);
     }
-    console.log('Done running.');
-    const auditKindLens = config.audits.map((v) => R.lensPath(['audits', v]));
-    const statistic = auditKindLens.reduce<Statistic>(
-      (acc, len, index) => {
-        const detailArr = lighthouseReports.map<AuditKindDetail>(R.view(len));
-        const numericValueArr = detailArr.map((v) => v.numericValue);
-        acc.audits[config.audits[index]] = {
-          max: max(numericValueArr),
-          min: min(numericValueArr),
-          avg: mean(numericValueArr),
-          med: median(numericValueArr),
-        };
-        return acc;
-      },
-      {
-        url: config.url,
-        runs: config.runs,
-        audits: {},
-      },
-    );
-    return {
-      lighthouseReports,
-      statistic,
-    };
   } catch (e) {
-    console.log(e.message);
+    console.error('Something went wrong while running "start" command.');
+    console.error(e);
+    process.exit(1);
   }
 };
+
+export const configAction = async (path: string): Promise<void> => {
+  try {
+    await commandSchemas.config.validate({ path }, { stripUnknown: true });
+    const rawConfig = await readConfig(path);
+    const config = await validateWithStrictAndCast(configSchema, rawConfig);
+    debug(config);
+    const reports = await processData(config);
+    debug(reports?.statistic);
+    if (reports) {
+      await writeOutputs(config, reports);
+    }
+  } catch (e) {
+    console.error('Something went wrong while running "config" command.');
+    console.error(e);
+    process.exit(1);
+  }
+};
+
+program.version(packageJson.version).description(packageJson.description);
+
+program
+  .command('config <path>')
+  .description('The path to the custom benchmark config.')
+  .action(configAction);
+
+program
+  .command('start <url>', { isDefault: true })
+  .description(
+    'Start running benchmark with default benchmark setting. The <url> is the webpage you want to test against.',
+  )
+  .option(
+    '-r, --runs <number>',
+    'How many times do you want to perform benchmark.',
+  )
+  .action(startAction);
+
+program.parse(process.argv);
