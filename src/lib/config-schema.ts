@@ -2,7 +2,7 @@ import { Flags, Config } from 'lighthouse';
 import * as chromeLauncher from 'chrome-launcher';
 import * as yup from 'yup';
 
-export const config = yup
+export const configSchema = yup
   .object({
     url: yup.string().required(),
     runs: yup.number().positive().required().default(1),
@@ -14,14 +14,6 @@ export const config = yup
         statisticFilename: yup.string().default('statistic.json'),
       })
       .noUnknown(),
-    audits: yup
-      .array(yup.string())
-      .default([
-        'first-meaningful-paint',
-        'first-contentful-paint',
-        'first-cpu-idle',
-        'time-to-first-byte',
-      ]),
     chrome: yup
       .object<chromeLauncher.Options>({
         startingUrl: yup.string().notRequired(),
