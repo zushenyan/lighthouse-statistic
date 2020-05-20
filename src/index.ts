@@ -2,22 +2,27 @@
 import fs from 'fs';
 import path from 'path';
 import { program } from 'commander';
+import ora from 'ora';
 
 import * as commandSchemas from './schemas/commands';
 import { validateWithStrictAndCast } from './schemas/utils';
-import { Reports, ConfigSchema, configSchema, processData } from './lib';
+import { Report, ConfigSchema, configSchema, collectReports } from './lib';
 import debug from './debug';
 import { PackageJson } from './index.d';
 
+export const readJson = async <T>(filePath: string): Promise<T> => {
+  const rawData = await fs.promises.readFile(filePath);
+  const json = JSON.parse(rawData.toString());
+  debug(json);
+  return json;
+};
+
 export const readPackageJson = async (): Promise<PackageJson | undefined> => {
   try {
-    const packageJsonPath = path.resolve(__dirname, '..', 'package.json');
-    const rawData = await fs.promises.readFile(packageJsonPath);
-    const json = JSON.parse(rawData.toString());
-    debug(json);
-    return json;
+    const filePath = path.resolve(__dirname, '..', 'package.json');
+    return await readJson(filePath);
   } catch (e) {
-    console.error('Something went wrong while reading config.');
+    console.error('Something went wrong while loading "package.json".');
     console.error(e);
     process.exit(1);
   }
@@ -27,11 +32,8 @@ export const readConfig = async (
   filePath: string | undefined = '',
 ): Promise<ConfigSchema | {} | undefined> => {
   try {
-    const absPath = path.resolve(process.cwd(), filePath);
-    const rawData = await fs.promises.readFile(absPath);
-    const json = JSON.parse(rawData.toString());
-    debug(json);
-    return json;
+    const absFilePath = path.resolve(process.cwd(), filePath);
+    return await readJson(absFilePath);
   } catch (e) {
     console.error('Something went wrong while reading config.');
     console.error(e);
@@ -41,10 +43,10 @@ export const readConfig = async (
 
 export const writeOutputs = async (
   config: ConfigSchema,
-  reports: Reports,
+  reports: Report,
 ): Promise<void> => {
+  const spinner = ora('Writing reports to disk...').start();
   try {
-    console.log('Writing reports to disk...');
     const directoryPath = path.resolve(
       config.output.basePath,
       config.output.directoryName,
@@ -66,13 +68,34 @@ export const writeOutputs = async (
     );
     await fs.promises.writeFile(reportsPath, reportsRawData);
     await fs.promises.writeFile(statisticPath, statisticRawData);
-    console.log(
+    spinner.succeed(
       `Done writing reports. Please see "${directoryPath}" for reports.`,
     );
   } catch (e) {
-    console.error('Something went wrong while writing reports to disk.');
+    spinner.fail('Something went wrong while writing reports to disk.');
     console.error(e);
     process.exit(1);
+  }
+};
+
+export const runBenchmark = async (
+  args: Record<string, unknown> | undefined,
+): Promise<void> => {
+  const config = await validateWithStrictAndCast(configSchema, args);
+  debug(config);
+  const spinner = ora().start();
+  const reports = await collectReports({
+    config,
+    stepCallback: (index) => {
+      spinner.text = `Running ${index + 1} of ${config.runs} times...`;
+    },
+  });
+  spinner.succeed(
+    `Done benchmarking ${reports?.statistic.runs.total} times. Failed ${reports?.statistic.runs.failed} times.`,
+  );
+  debug(reports?.statistic);
+  if (reports) {
+    await writeOutputs(config, reports);
   }
 };
 
@@ -85,13 +108,8 @@ export const startAction = async (
       { url, ...opts },
       { stripUnknown: true },
     );
-    const config = await validateWithStrictAndCast(configSchema, args);
-    debug(config);
-    const reports = await processData(config);
-    debug(reports?.statistic);
-    if (reports) {
-      await writeOutputs(config, reports);
-    }
+    debug(args);
+    await runBenchmark(args);
   } catch (e) {
     console.error('Something went wrong while running "start" command.');
     console.error(e);
@@ -101,15 +119,14 @@ export const startAction = async (
 
 export const configAction = async (path: string): Promise<void> => {
   try {
-    await commandSchemas.config.validate({ path }, { stripUnknown: true });
-    const rawConfig = await readConfig(path);
-    const config = await validateWithStrictAndCast(configSchema, rawConfig);
-    debug(config);
-    const reports = await processData(config);
-    debug(reports?.statistic);
-    if (reports) {
-      await writeOutputs(config, reports);
-    }
+    const { path: validatedPath } = await commandSchemas.config.validate(
+      { path },
+      { stripUnknown: true },
+    );
+    debug('path', path);
+    debug('validatedPath', validatedPath);
+    const rawConfig = await readConfig(validatedPath);
+    await runBenchmark(rawConfig);
   } catch (e) {
     console.error('Something went wrong while running "config" command.');
     console.error(e);

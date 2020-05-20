@@ -7,6 +7,11 @@ export interface Numbers {
   med: number;
 }
 
+export interface AuditDetail {
+  score: Numbers;
+  numericValue: Numbers;
+}
+
 export interface Statistic {
   url: string;
   runs: {
@@ -14,19 +19,11 @@ export interface Statistic {
     failed: number;
   };
   audits: {
-    [k: string]: {
-      score: Numbers;
-      numericValue: Numbers;
-    };
+    [k: string]: AuditDetail;
   };
 }
 
-export interface BenchmarkReport {
-  reports: Array<LighthouseReport>;
-  failed: number;
-}
-
-export interface Reports {
+export interface Report {
   lighthouseReports: Array<LighthouseReport>;
   statistic: Statistic;
 }
