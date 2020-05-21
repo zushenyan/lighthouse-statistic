@@ -6,9 +6,19 @@ import ora from 'ora';
 
 import * as commandSchemas from './schemas/commands';
 import { validateWithStrictAndCast } from './schemas/utils';
-import { Report, ConfigSchema, configSchema, collectReports } from './lib';
+import {
+  Report,
+  Schema as ConfigSchema,
+  schema as configSchema,
+  defaultOutputOptions,
+  collectReports,
+} from './core';
 import debug from './debug';
-import { PackageJson } from './index.d';
+
+export interface PackageJson {
+  version?: string;
+  description?: string;
+}
 
 export const readJson = async <T>(filePath: string): Promise<T> => {
   const rawData = await fs.promises.readFile(filePath);
@@ -48,17 +58,17 @@ export const writeOutputs = async (
   const spinner = ora('Writing reports to disk...').start();
   try {
     const directoryPath = path.resolve(
-      config.output.basePath,
-      config.output.directoryName,
+      config.output?.basePath || defaultOutputOptions.basePath,
+      config.output?.directoryName || defaultOutputOptions.directoryName,
     );
     await fs.promises.mkdir(directoryPath, { recursive: true });
     const reportsPath = path.resolve(
       directoryPath,
-      config.output.reportsFilename,
+      config.output?.reportsFilename || defaultOutputOptions.reportsFilename,
     );
     const statisticPath = path.resolve(
       directoryPath,
-      config.output.statisticFilename,
+      config.output?.statisticFilename || defaultOutputOptions.reportsFilename,
     );
     const reportsRawData = new Uint8Array(
       Buffer.from(JSON.stringify(reports.lighthouseReports)),
@@ -119,13 +129,13 @@ export const startAction = async (
 
 export const configAction = async (path: string): Promise<void> => {
   try {
-    const { path: validatedPath } = await commandSchemas.config.validate(
+    const args = await commandSchemas.config.validate(
       { path },
       { stripUnknown: true },
     );
     debug('path', path);
-    debug('validatedPath', validatedPath);
-    const rawConfig = await readConfig(validatedPath);
+    debug('args', args);
+    const rawConfig = await readConfig(args?.path);
     await runBenchmark(rawConfig);
   } catch (e) {
     console.error('Something went wrong while running "config" command.');

@@ -1,10 +1,19 @@
 import lighthouse, { Report as LighthouseReport } from 'lighthouse';
 import * as chromeLauncher from 'chrome-launcher';
 
-import { ConfigSchema } from './config-schema.d';
-import { BenchmarkReport, CollectReportsArguments } from './reporter.d';
-import { Report } from './data-processor.d';
-import { createReport } from './data-processor';
+import { Schema as ConfigSchema } from './schemas';
+import { Report, createReport } from './data-processor';
+
+export interface BenchmarkReport {
+  reports: Array<LighthouseReport>;
+  failed: number;
+}
+
+export interface CollectReportsArguments {
+  config: ConfigSchema;
+  stepCallback?: (index: number) => void;
+  errorCallback?: (index: number, failed: number) => void;
+}
 
 export const runLighthouse = async ({
   url,
