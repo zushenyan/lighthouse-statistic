@@ -128,6 +128,9 @@ describe('createAudits', () => {
       }),
     });
   });
+  test('should work for empty array', () => {
+    expect(createAudits([])).toEqual({});
+  });
 });
 
 describe('createReport', () => {

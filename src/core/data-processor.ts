@@ -82,7 +82,7 @@ export const createAudits = (
       numericValue: { max: 0, min: 0, avg: 0, med: 0 },
     },
     R.identity,
-    Object.keys(lighthouseReports[0]?.audits),
+    Object.keys(lighthouseReports[0]?.audits || {}),
   );
 
 export const createReport = ({

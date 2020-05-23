@@ -11,7 +11,7 @@ import {
   Schema as ConfigSchema,
   schema as configSchema,
   defaultOutputOptions,
-  collectReports,
+  startCollecting,
 } from './core';
 import debug from './debug';
 
@@ -94,7 +94,7 @@ export const runBenchmark = async (
   const config = await validateWithStrictAndCast(configSchema, args);
   debug(config);
   const spinner = ora().start();
-  const reports = await collectReports({
+  const reports = await startCollecting({
     config,
     stepCallback: (index) => {
       spinner.text = `Running ${index + 1} of ${config.runs} times...`;
@@ -149,12 +149,10 @@ export const configAction = async (path: string): Promise<void> => {
   program
     .version(packageJson?.version || '')
     .description(packageJson?.description || '');
-
   program
     .command('config <path>')
     .description('The path to the custom benchmark config.')
     .action(configAction);
-
   program
     .command('start <url>', { isDefault: true })
     .description(
@@ -165,6 +163,5 @@ export const configAction = async (path: string): Promise<void> => {
       'How many times do you want to perform benchmark.',
     )
     .action(startAction);
-
   program.parse(process.argv);
 })();

@@ -11,8 +11,11 @@
     "lighthouse",
     "audits",
     "performance",
+    "benchmark",
     "statistic",
-    "cli"
+    "cli",
+    "batch",
+    "bulk"
   ],
   "repository": {
     "type": "git",
