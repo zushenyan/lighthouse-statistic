@@ -23,7 +23,7 @@
   },
   "main": "./bin/core/index.js",
   "bin": {
-    "lighthouse-statistic": "./bin/index.js"
+    "lighthouse-statistic": "./bin/cli/index.js"
   },
   "files": [
     "bin"
@@ -34,7 +34,7 @@
   },
   "author": "Andrew Yan <zushenyan@gmail.com>",
   "scripts": {
-    "start": "node -r ts-node/register ./src/index.ts",
+    "start": "node -r ts-node/register ./src/cli/index.ts",
     "start:debug": "DEBUG=ls DEBUG_DEPTH=999 yarn run start",
     "clean": "rm -rf ./bin",
     "build": "yarn run clean && yarn run lint:fix && yarn run test:ci && tsc",
@@ -70,8 +70,12 @@
     "commander": "^5.1.0",
     "debug": "^4.1.1",
     "lighthouse": "^6.0.0",
+    "module-alias": "^2.2.2",
     "ora": "^4.0.4",
     "ramda": "^0.27.0",
     "yup": "^0.29.0"
+  },
+  "_moduleAliases": {
+    "@": "bin"
   }
 }

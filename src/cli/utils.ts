@@ -1,19 +1,24 @@
-#!/usr/bin/env node
 import fs from 'fs';
 import path from 'path';
-import { program } from 'commander';
 import ora from 'ora';
+import * as yup from 'yup';
 
-import * as commandSchemas from './schemas/commands';
-import { validateWithStrictAndCast } from './schemas/utils';
 import {
   Report,
   Schema as ConfigSchema,
   schema as configSchema,
   defaultOutputOptions,
   startCollecting,
-} from './core';
-import debug from './debug';
+} from '@/core';
+import debug from '@/debug';
+
+export async function validateWithStrictAndCast<T>(
+  schema: yup.Schema<T>,
+  variable: Record<string, unknown> | undefined,
+): Promise<T> {
+  const result = await schema.validate(variable, { strict: true });
+  return await schema.validate(result);
+}
 
 export interface PackageJson {
   version?: string;
@@ -29,7 +34,7 @@ export const readJson = async <T>(filePath: string): Promise<T> => {
 
 export const readPackageJson = async (): Promise<PackageJson | undefined> => {
   try {
-    const filePath = path.resolve(__dirname, '..', 'package.json');
+    const filePath = path.resolve(__dirname, '..', '..', 'package.json');
     return await readJson(filePath);
   } catch (e) {
     console.error('Something went wrong while loading "package.json".');
@@ -108,60 +113,3 @@ export const runBenchmark = async (
     await writeOutputs(config, reports);
   }
 };
-
-export const startAction = async (
-  url: string,
-  opts: Record<string, unknown>,
-): Promise<void> => {
-  try {
-    const args = await commandSchemas.start.validate(
-      { url, ...opts },
-      { stripUnknown: true },
-    );
-    debug(args);
-    await runBenchmark(args);
-  } catch (e) {
-    console.error('Something went wrong while running "start" command.');
-    console.error(e);
-    process.exit(1);
-  }
-};
-
-export const configAction = async (path: string): Promise<void> => {
-  try {
-    const args = await commandSchemas.config.validate(
-      { path },
-      { stripUnknown: true },
-    );
-    debug('path', path);
-    debug('args', args);
-    const rawConfig = await readConfig(args?.path);
-    await runBenchmark(rawConfig);
-  } catch (e) {
-    console.error('Something went wrong while running "config" command.');
-    console.error(e);
-    process.exit(1);
-  }
-};
-
-(async (): Promise<void> => {
-  const packageJson = await readPackageJson();
-  program
-    .version(packageJson?.version || '')
-    .description(packageJson?.description || '');
-  program
-    .command('config <path>')
-    .description('The path to the custom benchmark config.')
-    .action(configAction);
-  program
-    .command('start <url>', { isDefault: true })
-    .description(
-      'Start running benchmark with default benchmark setting. The <url> is the webpage you want to test against.',
-    )
-    .option(
-      '-r, --runs <number>',
-      'How many times do you want to perform benchmark.',
-    )
-    .action(startAction);
-  program.parse(process.argv);
-})();
