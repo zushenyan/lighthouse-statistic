@@ -1,5 +1,5 @@
-import debug from '@/debug';
-import { runBenchmark } from '@/cli/utils';
+import debug from '../../../debug';
+import { runBenchmark } from '../../utils';
 import { schema } from './schema';
 
 export const action = async (

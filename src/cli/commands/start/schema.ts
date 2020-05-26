@@ -5,6 +5,7 @@ export const schema = yup
     url: yup.string().url().required(),
     runs: yup.number().positive().default(1),
   })
+  .noUnknown()
   .required();
 
 export type Schema = yup.InferType<typeof schema>;

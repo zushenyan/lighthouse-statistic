@@ -1,2 +1,2 @@
-export { action as start } from './start/action';
-export { action as config } from './config/action';
+export { action as start } from './start';
+export { action as config } from './config';

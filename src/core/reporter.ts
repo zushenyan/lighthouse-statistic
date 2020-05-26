@@ -33,8 +33,12 @@ export const runLighthouse = R.curry(
 type LighthouseRunner = (
   config: ConfigSchema,
 ) => Promise<LighthouseReport | undefined>;
-type StepCallback = (index: number) => void;
-type ErrorCallback = (index: number, failed: number) => void;
+type StepCallback = (index: number, config: ConfigSchema) => void;
+type ErrorCallback = (
+  index: number,
+  failed: number,
+  config: ConfigSchema,
+) => void;
 
 export const collectLighthouseReports = R.curry(
   async (
@@ -49,7 +53,7 @@ export const collectLighthouseReports = R.curry(
     const lighthouseReports: Array<LighthouseReport> = [];
     let failed = 0;
     for (let i = 0, times = i + 1; i < config.runs; i++, times++) {
-      stepCallback?.(i);
+      stepCallback?.(i, config);
       try {
         const report = await lighthouseRunner(config);
         if (report) {
@@ -57,7 +61,7 @@ export const collectLighthouseReports = R.curry(
         }
       } catch (e) {
         failed = failed + 1;
-        errorCallback?.(i, failed);
+        errorCallback?.(i, failed, config);
       }
     }
     return {
@@ -67,16 +71,11 @@ export const collectLighthouseReports = R.curry(
   },
 );
 
-type LighthouseReportsCollector = (
-  config: ConfigSchema,
-) => Promise<{
-  reports: Array<LighthouseReport>;
-  failed: number;
-}>;
-
 export const collectReports = R.curry(
   async (
-    lighthouseReportsCollector: LighthouseReportsCollector,
+    lighthouseReportsCollector: (
+      config: ConfigSchema,
+    ) => Promise<{ reports: Array<LighthouseReport>; failed: number }>,
     config: ConfigSchema,
   ): Promise<Report | undefined> => {
     const { reports, failed } = await lighthouseReportsCollector(config);
@@ -89,20 +88,23 @@ export const collectReports = R.curry(
   },
 );
 
-export const startCollecting = async ({
-  config,
-  stepCallback = (): void => undefined,
-  errorCallback = (): void => undefined,
-}: {
-  config: ConfigSchema;
-  stepCallback?: StepCallback;
-  errorCallback?: ErrorCallback;
-}): Promise<Report | undefined> =>
-  await collectReports(
-    collectLighthouseReports(
-      stepCallback,
-      errorCallback,
-      runLighthouse(chromeLauncher.launch, lighthouse),
+export const startCollecting = R.curry(
+  async (
+    {
+      stepCallback = (): void => undefined,
+      errorCallback = (): void => undefined,
+    }: {
+      stepCallback?: StepCallback;
+      errorCallback?: ErrorCallback;
+    },
+    config: ConfigSchema,
+  ): Promise<Report | undefined> =>
+    await collectReports(
+      collectLighthouseReports(
+        stepCallback,
+        errorCallback,
+        runLighthouse(chromeLauncher.launch, lighthouse),
+      ),
+      config,
     ),
-    config,
-  );
+);
