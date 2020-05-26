@@ -1,7 +1,33 @@
 import { Report as LighthouseReport } from 'lighthouse';
 import * as R from 'ramda';
 
-import { Statistic, AuditDetail, Numbers, Report } from './data-processor.d';
+export interface Numbers {
+  max: number;
+  min: number;
+  avg: number;
+  med: number;
+}
+
+export interface AuditDetail {
+  score: Numbers;
+  numericValue: Numbers;
+}
+
+export interface Statistic {
+  url: string;
+  runs: {
+    total: number;
+    failed: number;
+  };
+  audits: {
+    [k: string]: AuditDetail;
+  };
+}
+
+export interface Report {
+  lighthouseReports: Array<LighthouseReport>;
+  statistic: Statistic;
+}
 
 export type GetNonNilArrayReturnType<U, T> = (v: U[]) => T[];
 
@@ -40,7 +66,7 @@ export const createAuditDetail = ({
 
 export const auditDetailTransformer = (
   lighthouseReports: Array<LighthouseReport>,
-) => (acc: AuditDetail, auditKey: string): AuditDetail =>
+) => (acc: AuditDetail | undefined, auditKey: string): AuditDetail =>
   createAuditDetail({
     score: createScoreArr(auditKey)(lighthouseReports),
     numericValue: createNumericValueArr(auditKey)(lighthouseReports),
@@ -56,7 +82,7 @@ export const createAudits = (
       numericValue: { max: 0, min: 0, avg: 0, med: 0 },
     },
     R.identity,
-    Object.keys(lighthouseReports[0]?.audits),
+    Object.keys(lighthouseReports[0]?.audits || {}),
   );
 
 export const createReport = ({

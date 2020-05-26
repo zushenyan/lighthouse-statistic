@@ -11,16 +11,19 @@
     "lighthouse",
     "audits",
     "performance",
+    "benchmark",
     "statistic",
-    "cli"
+    "cli",
+    "batch",
+    "bulk"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/zushenyan/lighthouse-statistic"
   },
-  "main": "./bin/lib/index.js",
+  "main": "./bin/core/index.js",
   "bin": {
-    "lighthouse-statistic": "./bin/index.js"
+    "lighthouse-statistic": "./bin/cli/index.js"
   },
   "files": [
     "bin"
@@ -31,7 +34,7 @@
   },
   "author": "Andrew Yan <zushenyan@gmail.com>",
   "scripts": {
-    "start": "node -r ts-node/register ./src/index.ts",
+    "start": "ts-node ./src/cli/index.ts",
     "start:debug": "DEBUG=ls DEBUG_DEPTH=999 yarn run start",
     "clean": "rm -rf ./bin",
     "build": "yarn run clean && yarn run lint:fix && yarn run test:ci && tsc",
@@ -44,31 +47,31 @@
     "test:ci": "jest --coverage --ci --passWithNoTests"
   },
   "devDependencies": {
-    "@types/jest": "^25.1.4",
-    "@types/minimist": "^1.2.0",
-    "@typescript-eslint/eslint-plugin": "^2.25.0",
-    "@typescript-eslint/parser": "^2.25.0",
-    "eslint": "^6.8.0",
-    "eslint-config-prettier": "^6.10.1",
-    "eslint-plugin-prettier": "^3.1.2",
-    "husky": "^4.2.3",
-    "jest": "^25.2.0",
-    "lint-staged": "^10.0.9",
-    "prettier": "^2.0.2",
-    "ts-jest": "^25.2.1",
+    "@types/jest": "^25.2.3",
+    "@typescript-eslint/eslint-plugin": "^2.34.0",
+    "@typescript-eslint/parser": "^2.34.0",
+    "eslint": "^7.0.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-jest": "^23.13.1",
+    "eslint-plugin-prettier": "^3.1.3",
+    "husky": "^4.2.5",
+    "jest": "^26.0.1",
+    "lint-staged": "^10.2.4",
+    "prettier": "^2.0.5",
+    "ts-jest": "^26.0.0",
     "ts-node": "^8.10.1",
-    "typescript": "^3.8.3"
+    "typescript": "^3.9.3"
   },
   "dependencies": {
     "@types/debug": "^4.1.5",
-    "@types/ramda": "^0.27.5",
-    "@types/yup": "^0.28.3",
+    "@types/ramda": "^0.27.6",
+    "@types/yup": "^0.29.0",
     "chrome-launcher": "^0.13.2",
     "commander": "^5.1.0",
     "debug": "^4.1.1",
-    "lighthouse": "^5.6.0",
+    "lighthouse": "^6.0.0",
     "ora": "^4.0.4",
     "ramda": "^0.27.0",
-    "yup": "^0.28.5"
+    "yup": "^0.29.0"
   }
 }
